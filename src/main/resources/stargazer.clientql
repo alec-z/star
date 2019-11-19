@@ -1,0 +1,23 @@
+query {
+  repository(owner:\"%s\", name:\"%s\") {
+    stargazers(first:100, after:%s) {
+      totalCount
+      pageInfo {
+        endCursor
+        hasNextPage
+        hasPreviousPage
+        startCursor
+      }
+      edges {
+        starredAt
+        node {
+          id
+          login
+          name
+          company
+          createdAt
+        }
+      }
+    }
+  }
+}

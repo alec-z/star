@@ -15,9 +15,10 @@ import javax.persistence.TemporalType;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.sun.javafx.beans.IDProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 
@@ -36,6 +37,7 @@ public class HistorySummary {
 
   private Integer removeCount;
 
+  @JsonIgnore
   @ManyToOne
   @JoinColumn(name = "code_repository_id")
   private CodeRepository codeRepository;

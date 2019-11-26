@@ -4,11 +4,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
-
 
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
@@ -52,6 +49,7 @@ public class StarTask {
   private StargazerDao stargazerDao;
 
   private String requestTemplate = "";
+
   private String apiToken = "";
 
   ObjectMapper objectMapper = new ObjectMapper();
@@ -65,14 +63,14 @@ public class StarTask {
       this.requestTemplate = Resources.toString(requestTemplateUrl, Charsets.UTF_8);
       URL apiTokenUrl = Resources.getResource("api_token.secret");
       this.apiToken = Resources.toString(apiTokenUrl, Charsets.UTF_8);
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       e.printStackTrace();
     }
   }
+
   public JsonNode invokeQL(String ql) throws IOException {
     ql = ql.replaceAll("\n", " ");
-    String clientQLJson = "{\"query\": \"" +  ql + "\"}";
+    String clientQLJson = "{\"query\": \"" + ql + "\"}";
     String response = Request.Post("https://api.github.com/graphql")
         .addHeader("Authorization", "Bearer " + this.apiToken)
         .addHeader("Content-Type", "application/json")
@@ -84,7 +82,7 @@ public class StarTask {
   }
 
   @Transactional
-  private void crawlCodeRepository(CodeRepository codeRepository) throws IOException, ParseException {
+  public void crawlCodeRepository(CodeRepository codeRepository) throws IOException, ParseException {
     String userName = codeRepository.getUserName();
     String repositoryName = codeRepository.getRepositoryName();
 
@@ -106,7 +104,7 @@ public class StarTask {
     int addCount = 0;
     int removeCount = 0;
 
-    while (stargazerNodes.size() > 0 ) {
+    while (stargazerNodes.size() > 0) {
       for (JsonNode stargazerNode : stargazerNodes) {
         String userId = stargazerNode.path("node").path("id").asText();
         String userLogin = stargazerNode.path("node").path("login").asText();
@@ -114,10 +112,11 @@ public class StarTask {
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
         Date starredAt = df.parse(starredAtStr);
-        Stargazer stargazer = stargazerDao.findByCodeRepositoryIdAndUserId(codeRepository.getId(), stargazerNode.path("node").path("id").asText());
+        Stargazer stargazer = stargazerDao
+            .findByCodeRepositoryIdAndUserId(codeRepository.getId(), stargazerNode.path("node").path("id").asText());
         if (stargazer == null) {
           addCount++;
-          stargazer = stargazerDao.save(new Stargazer(userId, userLogin, starredAt, codeRepository, (byte)1));
+          stargazer = stargazerDao.save(new Stargazer(userId, userLogin, starredAt, codeRepository, (byte) 1));
         }
         // 之前已经unstar的，又重新star。
         if (stargazer.getLastUnStarTime() != null) {
@@ -131,25 +130,21 @@ public class StarTask {
           stargazerDao.save(stargazer);
           addCount++;
         }
-        stargazer.setShowMark((byte)1);
+        stargazer.setShowMark((byte) 1);
         stargazerDao.save(stargazer);
       }
 
-
-
-
       if (res.path("pageInfo").path("hasNextPage").asBoolean()) {
         String afterCur = res.path("pageInfo").path("endCursor").asText();
-        ql = String.format(this.requestTemplate, userName, repositoryName, "\\\""+ afterCur + "\\\"");
+        ql = String.format(this.requestTemplate, userName, repositoryName, "\\\"" + afterCur + "\\\"");
         res = invokeQL(ql).path("data").path("repository").path("stargazers");
         stargazerNodes = res.path("edges");
-      }
-      else {
+      } else {
         break;
       }
     }
 
-    for (Stargazer stargazer: stargazerDao.findByCodeRepositoryIdAndShowMark(codeRepository.getId(), (byte)0)) {
+    for (Stargazer stargazer : stargazerDao.findByCodeRepositoryIdAndShowMark(codeRepository.getId(), (byte) 0)) {
       if (stargazer.getLastUnStarTime() == null) {
         stargazer.setLastUnStarTime(now);
         StarAction starAction = new StarAction();
@@ -165,20 +160,18 @@ public class StarTask {
     historySummary.setAddCount(addCount);
     historySummary.setRemoveCount(removeCount);
     historySummaryDao.save(historySummary);
-
   }
-  @Scheduled(cron = "0 50 6,9,12,15,18,21,23,11,14,8,22,10 * * ?")
+
+  @Scheduled(cron = "0 37 6,9,12,15,16,18,21,23,11,14,8,22,10 * * ?")
   public void doDailyTask() {
-    logger.warn("begin task ----------------"+ (new Date()).toString());
+    logger.warn("begin task ----------------" + (new Date()).toString());
     for (CodeRepository codeRepository : codeRepositoryDao.findAll()) {
       try {
         crawlCodeRepository(codeRepository);
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
         e.printStackTrace();
       }
     }
-
   }
 
 

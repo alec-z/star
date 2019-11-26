@@ -5,6 +5,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import com.aleczheng.star.po.CodeRepository;
 import com.aleczheng.star.po.CodeRepositoryWatch;
 
 public class CodeRepositoryDaoSelfDefinedImpl implements CodeRepositoryDaoSelfDefined {
@@ -18,4 +19,5 @@ public class CodeRepositoryDaoSelfDefinedImpl implements CodeRepositoryDaoSelfDe
         + " from code_repositories cr";
     return em.createNativeQuery(sql, CodeRepositoryWatch.class).setParameter(1, githubAccount).getResultList();
   }
+
 }

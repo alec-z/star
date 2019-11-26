@@ -1,16 +1,12 @@
 version: "3"
 
 services:
-  mysql:
-    image: 121.37.4.50:5000/star-tools/mysql
-    ports:
-      - "3307:3306"
   tool-java:
     image: 121.37.4.50:5000/star-tools/java
     working_dir: /star
-    command: ["mysql:3307", "--", "mvn", "-s", "/root/settings.xml", "spring-boot:run"]
+    command: ["121.37.4.50:3306", "--", "mvn", "-s", "/root/settings.xml", "spring-boot:run"]
     environment:
-      spring_datasource_url: jdbc:mysql://mysql:3306/star?characterEncoding=utf8&useSSL=false
+      spring_datasource_url: jdbc:mysql://121.37.4.50:3306/star?characterEncoding=utf8&useSSL=false
       server_port: 8081
     ports:
       - "8081:8081"

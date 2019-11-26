@@ -10,7 +10,7 @@ services:
     working_dir: /star
     command: ["mysql:3306", "--", "mvn", "-s", "/root/settings.xml", "spring-boot:run"]
     environment:
-      spring_datasource_url: jdbc:mysql://mysql:3306/customer?characterEncoding=utf8&useSSL=false
+      spring_datasource_url: jdbc:mysql://mysql:3306/star?characterEncoding=utf8&useSSL=false
       server_port: 8081
     ports:
       - "8081:8081"
